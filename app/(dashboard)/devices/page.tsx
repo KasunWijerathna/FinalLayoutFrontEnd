@@ -26,32 +26,30 @@ import {
   IconButton,
   CircularProgress,
   Alert,
-  Snackbar
+  Snackbar,
+  Grid
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { RootState, AppDispatch } from '@/app/_lib/store';
 import { fetchDevices, createDevice, updateDevice, deleteDevice } from '@/app/_lib/store/slices/deviceSlice';
+import { fetchLocations } from '@/app/_lib/store/slices/locationSlice';
 import { Device, DeviceType, Status } from '@/app/_lib/types';
-
-type DeviceFormData = Omit<Device, '_id' | 'createdAt' | 'updatedAt'>;
 
 export default function DevicesPage() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const { token } = useSelector((state: RootState) => state.auth);
-  const { devices, loading } = useSelector((state: RootState) => state.devices);
+  const { devices, loading, error } = useSelector((state: RootState) => state.devices);
   const { locations } = useSelector((state: RootState) => state.locations);
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [openDialog, setOpenDialog] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
-  const [formData, setFormData] = useState<DeviceFormData>({
+  const [formData, setFormData] = useState({
     serialNumber: '',
-    name: '',
-    type: 'pos',
-    locationId: '',
-    status: 'active',
-    image: '',
+    type: 'pos' as DeviceType,
+    status: 'Active' as Status,
+    location: '',
+    image: ''
   });
-  const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -59,34 +57,33 @@ export default function DevicesPage() {
   });
 
   useEffect(() => {
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    dispatch(fetchLocations());
+  }, [dispatch]);
 
-    dispatch(fetchDevices());
-  }, [dispatch, token, router]);
+  useEffect(() => {
+    if (selectedLocation) {
+      dispatch(fetchDevices(selectedLocation));
+    }
+  }, [dispatch, selectedLocation]);
 
   const handleOpenDialog = (device?: Device) => {
     if (device) {
       setEditingDevice(device);
       setFormData({
         serialNumber: device.serialNumber,
-        name: device.name,
         type: device.type,
-        locationId: device.locationId,
         status: device.status,
-        image: device.image || '',
+        location: device.location,
+        image: device.image || ''
       });
     } else {
       setEditingDevice(null);
       setFormData({
         serialNumber: '',
-        name: '',
         type: 'pos',
-        locationId: '',
-        status: 'active',
-        image: '',
+        status: 'Active',
+        location: selectedLocation,
+        image: ''
       });
     }
     setOpenDialog(true);
@@ -97,25 +94,40 @@ export default function DevicesPage() {
     setEditingDevice(null);
     setFormData({
       serialNumber: '',
-      name: '',
       type: 'pos',
-      locationId: '',
-      status: 'active',
-      image: '',
+      status: 'Active',
+      location: selectedLocation,
+      image: ''
     });
   };
 
   const handleSubmit = async () => {
     try {
+      if (!formData.location) {
+        setSnackbar({
+          open: true,
+          message: 'Please select a location first',
+          severity: 'error'
+        });
+        return;
+      }
+
       if (editingDevice) {
-        await dispatch(updateDevice({ id: editingDevice._id, data: formData })).unwrap();
+        await dispatch(updateDevice({ 
+          locationId: selectedLocation, 
+          deviceId: editingDevice._id, 
+          data: formData 
+        })).unwrap();
         setSnackbar({
           open: true,
           message: 'Device updated successfully',
           severity: 'success'
         });
       } else {
-        await dispatch(createDevice(formData)).unwrap();
+        await dispatch(createDevice({ 
+          locationId: selectedLocation, 
+          data: formData 
+        })).unwrap();
         setSnackbar({
           open: true,
           message: 'Device created successfully',
@@ -123,8 +135,10 @@ export default function DevicesPage() {
         });
       }
       handleCloseDialog();
+      if (selectedLocation) {
+        dispatch(fetchDevices(selectedLocation));
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to save device');
       setSnackbar({
         open: true,
         message: err.message || 'Failed to save device',
@@ -136,14 +150,19 @@ export default function DevicesPage() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this device?')) {
       try {
-        await dispatch(deleteDevice(id)).unwrap();
+        await dispatch(deleteDevice({ 
+          locationId: selectedLocation, 
+          deviceId: id 
+        })).unwrap();
         setSnackbar({
           open: true,
           message: 'Device deleted successfully',
           severity: 'success'
         });
+        if (selectedLocation) {
+          dispatch(fetchDevices(selectedLocation));
+        }
       } catch (err) {
-        setError('Failed to delete device');
         setSnackbar({
           open: true,
           message: 'Failed to delete device',
@@ -157,13 +176,7 @@ export default function DevicesPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const filteredDevices = devices.filter(device => device.location === selectedLocation);
 
   return (
     <Box>
@@ -174,10 +187,31 @@ export default function DevicesPage() {
           color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
+          disabled={!selectedLocation}
         >
           Add Device
         </Button>
       </Box>
+
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth>
+            <InputLabel>Select Location</InputLabel>
+            <Select
+              value={selectedLocation}
+              label="Select Location"
+              onChange={(e) => setSelectedLocation(e.target.value)}
+            >
+              <MenuItem value="">Select a location</MenuItem>
+              {locations.map((location) => (
+                <MenuItem key={location._id} value={location._id}>
+                  {location.title}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+      </Grid>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -185,41 +219,55 @@ export default function DevicesPage() {
         </Alert>
       )}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Serial Number</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {devices.map((device) => (
-              <TableRow key={device._id}>
-                <TableCell>{device.serialNumber}</TableCell>
-                <TableCell>{device.name}</TableCell>
-                <TableCell>{device.type.toUpperCase()}</TableCell>
-                <TableCell>
-                  {locations.find(loc => loc._id === device.locationId)?.title || 'Unknown Location'}
-                </TableCell>
-                <TableCell>{device.status}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleOpenDialog(device)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(device._id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress />
+        </Box>
+      ) : selectedLocation ? (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Serial Number</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Image</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {filteredDevices.map((device) => (
+                <TableRow key={device._id}>
+                  <TableCell>{device.serialNumber}</TableCell>
+                  <TableCell>{device.type}</TableCell>
+                  <TableCell>{device.status}</TableCell>
+                  <TableCell>
+                    {device.image && (
+                      <img 
+                        src={device.image} 
+                        alt={device.serialNumber} 
+                        style={{ width: '50px', height: '50px', objectFit: 'cover' }} 
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => handleOpenDialog(device)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(device._id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      ) : (
+        <Alert severity="info">
+          Please select a location to view its devices
+        </Alert>
+      )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{editingDevice ? 'Edit Device' : 'Add Device'}</DialogTitle>
@@ -231,49 +279,31 @@ export default function DevicesPage() {
               onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
               fullWidth
               required
+              disabled={loading}
             />
-            <TextField
-              label="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              fullWidth
-              required
-            />
-            <FormControl fullWidth required>
+            <FormControl fullWidth>
               <InputLabel>Type</InputLabel>
               <Select
                 value={formData.type}
                 label="Type"
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as DeviceType })}
+                disabled={loading}
               >
                 <MenuItem value="pos">POS</MenuItem>
                 <MenuItem value="kiosk">Kiosk</MenuItem>
                 <MenuItem value="signage">Signage</MenuItem>
               </Select>
             </FormControl>
-            <FormControl fullWidth required>
-              <InputLabel>Location</InputLabel>
-              <Select
-                value={formData.locationId}
-                label="Location"
-                onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
-              >
-                {locations.map((location) => (
-                  <MenuItem key={location._id} value={location._id}>
-                    {location.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth required>
+            <FormControl fullWidth>
               <InputLabel>Status</InputLabel>
               <Select
                 value={formData.status}
                 label="Status"
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as Status })}
+                disabled={loading}
               >
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
+                <MenuItem value="Active">Active</MenuItem>
+                <MenuItem value="InActive">Inactive</MenuItem>
               </Select>
             </FormControl>
             <TextField
@@ -281,13 +311,19 @@ export default function DevicesPage() {
               value={formData.image}
               onChange={(e) => setFormData({ ...formData, image: e.target.value })}
               fullWidth
+              disabled={loading}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            {editingDevice ? 'Update' : 'Create'}
+          <Button onClick={handleCloseDialog} disabled={loading}>Cancel</Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            color="primary"
+            disabled={loading}
+          >
+            {loading ? 'Saving...' : (editingDevice ? 'Update' : 'Create')}
           </Button>
         </DialogActions>
       </Dialog>

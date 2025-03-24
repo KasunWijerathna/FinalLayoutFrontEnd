@@ -15,14 +15,14 @@ export interface Location {
 }
 
 export type DeviceType = 'pos' | 'kiosk' | 'signage';
+export type Status = 'Active' | 'InActive';
 
 export interface Device {
-  id: string;
+  _id: string;
   serialNumber: string;
-  name: string;
   type: DeviceType;
-  locationId: string;
-  status: 'active' | 'inactive';
+  status: Status;
+  location: string;
   image?: string;
   createdAt: string;
   updatedAt: string;

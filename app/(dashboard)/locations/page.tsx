@@ -185,7 +185,7 @@ export default function LocationsPage() {
                 <TableCell>{location.title}</TableCell>
                 <TableCell>{location.address}</TableCell>
                 <TableCell>{location.status}</TableCell>
-                <TableCell>{location.devices.length}</TableCell>
+                <TableCell>{location.devices?.length || 0}</TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleOpenDialog(location)}>
                     <EditIcon />

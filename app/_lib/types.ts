@@ -12,10 +12,9 @@ export type Status = 'Active' | 'InActive';
 export interface Device {
   _id: string;
   serialNumber: string;
-  name: string;
   type: DeviceType;
   status: Status;
-  locationId: string;
+  location: string;
   image?: string;
   createdAt: string;
   updatedAt: string;

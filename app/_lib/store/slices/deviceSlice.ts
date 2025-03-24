@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { deviceService } from '@/app/_lib/api/services';
-import { Device } from '@/app/_lib/types';
+import { deviceService, Device } from '@/app/_lib/api/services';
 
 interface DeviceState {
   devices: Device[];
@@ -16,43 +15,47 @@ const initialState: DeviceState = {
 
 export const fetchDevices = createAsyncThunk(
   'devices/fetchDevices',
-  async () => {
+  async (locationId: string) => {
     const response = await deviceService.getAll();
     return response;
   }
 );
 
 export const createDevice = createAsyncThunk(
-  'devices/createDevice',
-  async (device: Omit<Device, '_id' | 'createdAt' | 'updatedAt'>) => {
-    const response = await deviceService.create(device);
+  'devices/create',
+  async ({ locationId, data }: { locationId: string; data: Omit<Device, '_id' | 'createdAt' | 'updatedAt'> }) => {
+    const response = await deviceService.create(data);
     return response;
   }
 );
 
 export const updateDevice = createAsyncThunk(
-  'devices/updateDevice',
-  async ({ id, data }: { id: string; data: Partial<Device> }) => {
-    const response = await deviceService.update(id, data);
+  'devices/update',
+  async ({ locationId, deviceId, data }: { locationId: string; deviceId: string; data: Partial<Device> }) => {
+    const response = await deviceService.update(deviceId, data);
     return response;
   }
 );
 
 export const deleteDevice = createAsyncThunk(
-  'devices/deleteDevice',
-  async (id: string) => {
-    await deviceService.delete(id);
-    return id;
+  'devices/delete',
+  async ({ locationId, deviceId }: { locationId: string; deviceId: string }) => {
+    await deviceService.delete(deviceId);
+    return deviceId;
   }
 );
 
 const deviceSlice = createSlice({
   name: 'devices',
   initialState,
-  reducers: {},
+  reducers: {
+    clearDeviceError: (state) => {
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
+    // Fetch devices by location
     builder
-      // Fetch devices
       .addCase(fetchDevices.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -64,23 +67,57 @@ const deviceSlice = createSlice({
       .addCase(fetchDevices.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch devices';
+      });
+
+    // Create device
+    builder
+      .addCase(createDevice.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
-      // Create device
       .addCase(createDevice.fulfilled, (state, action) => {
+        state.loading = false;
         state.devices.push(action.payload);
       })
-      // Update device
+      .addCase(createDevice.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to create device';
+      });
+
+    // Update device
+    builder
+      .addCase(updateDevice.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updateDevice.fulfilled, (state, action) => {
+        state.loading = false;
         const index = state.devices.findIndex(device => device._id === action.payload._id);
         if (index !== -1) {
           state.devices[index] = action.payload;
         }
       })
-      // Delete device
+      .addCase(updateDevice.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to update device';
+      });
+
+    // Delete device
+    builder
+      .addCase(deleteDevice.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(deleteDevice.fulfilled, (state, action) => {
+        state.loading = false;
         state.devices = state.devices.filter(device => device._id !== action.payload);
+      })
+      .addCase(deleteDevice.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to delete device';
       });
   },
 });
 
+export const { clearDeviceError } = deviceSlice.actions;
 export default deviceSlice.reducer; 

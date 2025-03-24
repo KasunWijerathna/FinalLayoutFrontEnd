@@ -28,6 +28,7 @@ import {
   updateDevice,
   deleteDevice,
 } from '@/app/_lib/store/slices/deviceSlice';
+import { locationService } from '@/app/_lib/api/services';
 
 interface DeviceListProps {
   locationId: string;
@@ -39,9 +40,20 @@ export function DeviceList({ locationId }: DeviceListProps) {
   const devices = items[locationId] || [];
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
+  const [locations, setLocations] = useState([]);
 
   useEffect(() => {
     dispatch(fetchDevices(locationId));
+    // Fetch locations
+    const fetchLocations = async () => {
+      try {
+        const response = await locationService.getAll();
+        setLocations(response);
+      } catch (error) {
+        console.error('Failed to fetch locations:', error);
+      }
+    };
+    fetchLocations();
   }, [dispatch, locationId]);
 
   const handleCreateDevice = async (data: FormData) => {
@@ -136,6 +148,7 @@ export function DeviceList({ locationId }: DeviceListProps) {
         <DialogContent>
           <DeviceForm
             initialData={editingDevice}
+            locations={locations}
             onSubmit={async (data) => {
               if (editingDevice) {
                 await handleUpdateDevice(editingDevice.id, data);

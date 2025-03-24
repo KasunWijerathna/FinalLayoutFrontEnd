@@ -6,7 +6,7 @@ export interface Device {
   serialNumber: string;
   type: 'pos' | 'kiosk' | 'signage';
   status: Status;
-  locationId: string;
+  location: string;
   image?: string;
   createdAt: string;
   updatedAt: string;
@@ -56,27 +56,22 @@ export const locationService = {
 export const deviceService = {
   getAll: async (): Promise<Device[]> => {
     const response = await api.get('/api/devices');
-    return response.data;
+    return response.data.data;
   },
 
   getById: async (id: string): Promise<Device> => {
     const response = await api.get(`/api/devices/${id}`);
-    return response.data;
+    return response.data.data;
   },
 
   create: async (data: Omit<Device, '_id' | 'createdAt' | 'updatedAt'>): Promise<Device> => {
-    // Check device limit before creating
-    const canAddDevice = await locationService.validateDeviceLimit(data.locationId);
-    if (!canAddDevice) {
-      throw new Error('Location has reached maximum device limit (10)');
-    }
     const response = await api.post('/api/devices', data);
-    return response.data;
+    return response.data.data;
   },
 
   update: async (id: string, data: Partial<Device>): Promise<Device> => {
-    const response = await api.patch(`/api/devices/${id}`, data);
-    return response.data;
+    const response = await api.put(`/api/devices/${id}`, data);
+    return response.data.data;
   },
 
   delete: async (id: string): Promise<void> => {
@@ -87,16 +82,16 @@ export const deviceService = {
 export const dashboardService = {
   getStats: async (): Promise<DashboardStats> => {
     const response = await api.get('/api/dashboard/stats');
-    return response.data;
+    return response.data.data;
   },
 
   getRecentLocations: async (): Promise<Location[]> => {
     const response = await api.get('/api/dashboard/recent-locations');
-    return response.data;
+    return response.data.data;
   },
 
   getRecentDevices: async (): Promise<Device[]> => {
     const response = await api.get('/api/dashboard/recent-devices');
-    return response.data;
+    return response.data.data;
   },
 }; 
