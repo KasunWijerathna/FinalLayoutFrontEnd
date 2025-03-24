@@ -43,12 +43,16 @@ export default function LocationsPage() {
     title: '',
     address: '',
     status: 'active' as Status,
+    devices: [] as string[]
   });
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success' as 'success' | 'error'
   });
+
+  // Ensure locations is always an array
+  const locationsArray = Array.isArray(locations) ? locations : [];
 
   useEffect(() => {
     dispatch(fetchLocations());
@@ -61,6 +65,7 @@ export default function LocationsPage() {
         title: location.title,
         address: location.address,
         status: location.status,
+        devices: location.devices
       });
     } else {
       setEditingLocation(null);
@@ -68,6 +73,7 @@ export default function LocationsPage() {
         title: '',
         address: '',
         status: 'active',
+        devices: []
       });
     }
     setOpenDialog(true);
@@ -80,6 +86,7 @@ export default function LocationsPage() {
       title: '',
       address: '',
       status: 'active',
+      devices: []
     });
   };
 
@@ -173,7 +180,7 @@ export default function LocationsPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {locations.map((location) => (
+            {locationsArray.map((location) => (
               <TableRow key={location._id}>
                 <TableCell>{location.title}</TableCell>
                 <TableCell>{location.address}</TableCell>
