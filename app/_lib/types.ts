@@ -14,7 +14,7 @@ export interface Device {
   serialNumber: string;
   type: DeviceType;
   status: Status;
-  location: string;
+  location: Location | string;
   image?: string;
   createdAt: string;
   updatedAt: string;

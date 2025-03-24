@@ -19,7 +19,8 @@ import {
   CheckCircle as CheckCircleIcon,
   MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
-import { dashboardService, Location, Device } from '@/app/_lib/api/services';
+import { dashboardService } from '@/app/_lib/api/services';
+import { Location, Device, Status } from '@/app/_lib/types';
 import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
@@ -103,7 +104,7 @@ export default function Dashboard() {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {location.status === 'active' ? (
+            {location.status === 'Active' ? (
               <CheckCircleIcon color="success" />
             ) : (
               <WarningIcon color="warning" />
@@ -133,7 +134,7 @@ export default function Dashboard() {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {device.status === 'active' ? (
+            {device.status === 'Active' ? (
               <CheckCircleIcon color="success" />
             ) : (
               <WarningIcon color="warning" />
