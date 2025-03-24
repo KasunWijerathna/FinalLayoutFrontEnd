@@ -29,29 +29,31 @@ export interface DashboardStats {
   issues: number;
 }
 
+export const api = axios;
+
 export const locationService = {
   getAll: async (): Promise<Location[]> => {
-    const response = await axios.get('/locations');
+    const response = await api.get('/api/locations');
     return response.data;
   },
 
   getById: async (id: string): Promise<Location> => {
-    const response = await axios.get(`/locations/${id}`);
+    const response = await api.get(`/api/locations/${id}`);
     return response.data;
   },
 
   create: async (data: Omit<Location, '_id' | 'createdAt' | 'updatedAt'>): Promise<Location> => {
-    const response = await axios.post('/locations', data);
+    const response = await api.post('/api/locations', data);
     return response.data;
   },
 
   update: async (id: string, data: Partial<Location>): Promise<Location> => {
-    const response = await axios.patch(`/locations/${id}`, data);
+    const response = await api.patch(`/api/locations/${id}`, data);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await axios.delete(`/locations/${id}`);
+    await api.delete(`/api/locations/${id}`);
   },
 
   validateDeviceLimit: async (locationId: string): Promise<boolean> => {
@@ -62,12 +64,12 @@ export const locationService = {
 
 export const deviceService = {
   getAll: async (): Promise<Device[]> => {
-    const response = await axios.get('/devices');
+    const response = await api.get('/api/devices');
     return response.data;
   },
 
   getById: async (id: string): Promise<Device> => {
-    const response = await axios.get(`/devices/${id}`);
+    const response = await api.get(`/api/devices/${id}`);
     return response.data;
   },
 
@@ -77,33 +79,33 @@ export const deviceService = {
     if (!canAddDevice) {
       throw new Error('Location has reached maximum device limit (10)');
     }
-    const response = await axios.post('/devices', data);
+    const response = await api.post('/api/devices', data);
     return response.data;
   },
 
   update: async (id: string, data: Partial<Device>): Promise<Device> => {
-    const response = await axios.patch(`/devices/${id}`, data);
+    const response = await api.patch(`/api/devices/${id}`, data);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await axios.delete(`/devices/${id}`);
+    await api.delete(`/api/devices/${id}`);
   },
 };
 
 export const dashboardService = {
   getStats: async (): Promise<DashboardStats> => {
-    const response = await axios.get('/dashboard/stats');
+    const response = await api.get('/api/dashboard/stats');
     return response.data;
   },
 
   getRecentLocations: async (): Promise<Location[]> => {
-    const response = await axios.get('/dashboard/recent-locations');
+    const response = await api.get('/api/dashboard/recent-locations');
     return response.data;
   },
 
   getRecentDevices: async (): Promise<Device[]> => {
-    const response = await axios.get('/dashboard/recent-devices');
+    const response = await api.get('/api/dashboard/recent-devices');
     return response.data;
   },
 }; 

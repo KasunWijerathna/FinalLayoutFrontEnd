@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token');
+  const accessToken = request.cookies.get('access_token');
   const isAuthPage = request.nextUrl.pathname.startsWith('/(auth)') || 
                      request.nextUrl.pathname === '/login' || 
                      request.nextUrl.pathname === '/register';
@@ -16,15 +16,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Redirect to login if accessing protected routes without token
-  if (!token && !isAuthPage) {
+  // Redirect to login if accessing protected routes without access token
+  if (!accessToken && !isAuthPage) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to dashboard if accessing auth pages with token
-  if (token && isAuthPage) {
+  // Redirect to dashboard if accessing auth pages with access token
+  if (accessToken && isAuthPage) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

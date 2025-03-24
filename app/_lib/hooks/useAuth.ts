@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { api } from '../api/services';
 
 interface User {
   id: string;
@@ -21,11 +22,8 @@ export function useAuth() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      }
+      const response = await api.get('/api/auth/me');
+      setUser(response.data.user);
     } catch (error) {
       console.error('Auth check failed:', error);
     } finally {
@@ -35,16 +33,8 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) throw new Error('Login failed');
-
-      const data = await response.json();
-      setUser(data.user);
+      const response = await api.post('/api/auth/login', { email, password });
+      setUser(response.data.user);
       toast.success('Login successful');
       router.push('/dashboard');
     } catch (error) {
@@ -55,16 +45,10 @@ export function useAuth() {
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      if (!response.ok) throw new Error('Registration failed');
-
+      const response = await api.post('/api/auth/register', { name, email, password });
+      setUser(response.data.user);
       toast.success('Registration successful');
-      router.push('/login');
+      router.push('/dashboard');
     } catch (error) {
       toast.error('Registration failed');
       throw error;
@@ -73,7 +57,7 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await api.post('/api/auth/logout');
       setUser(null);
       toast.success('Logged out successfully');
       router.push('/login');

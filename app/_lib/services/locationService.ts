@@ -1,5 +1,5 @@
 import { Location } from '../types';
-import { api } from './api';
+import { api } from '../api/services';
 
 class LocationService {
   async getAll(): Promise<Location[]> {
