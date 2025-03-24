@@ -42,7 +42,7 @@ export default function LocationsPage() {
   const [formData, setFormData] = useState({
     title: '',
     address: '',
-    status: 'active' as Status,
+    status: 'Active' as Status,
     devices: [] as string[]
   });
   const [snackbar, setSnackbar] = useState({
@@ -72,7 +72,7 @@ export default function LocationsPage() {
       setFormData({
         title: '',
         address: '',
-        status: 'active',
+        status: 'Active',
         devices: []
       });
     }
@@ -85,7 +85,7 @@ export default function LocationsPage() {
     setFormData({
       title: '',
       address: '',
-      status: 'active',
+      status: 'Active',
       devices: []
     });
   };
@@ -227,8 +227,8 @@ export default function LocationsPage() {
                 label="Status"
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as Status })}
               >
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
+                <MenuItem value="Active">Active</MenuItem>
+                <MenuItem value="InActive">Inactive</MenuItem>
               </Select>
             </FormControl>
           </Box>

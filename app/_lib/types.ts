@@ -7,7 +7,7 @@ export interface User {
 }
 
 export type DeviceType = 'pos' | 'kiosk' | 'signage';
-export type Status = 'active' | 'inactive';
+export type Status = 'Active' | 'InActive';
 
 export interface Device {
   _id: string;

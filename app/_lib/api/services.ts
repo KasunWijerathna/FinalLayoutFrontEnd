@@ -1,20 +1,11 @@
 import axios from '../axios';
-
-export interface Location {
-  _id: string;
-  title: string;
-  address: string;
-  status: 'active' | 'inactive';
-  devices: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { Location, Status } from '@/app/_lib/types';
 
 export interface Device {
   _id: string;
   serialNumber: string;
   type: 'pos' | 'kiosk' | 'signage';
-  status: 'active' | 'inactive';
+  status: Status;
   locationId: string;
   image?: string;
   createdAt: string;
@@ -34,7 +25,7 @@ export const api = axios;
 export const locationService = {
   getAll: async (): Promise<Location[]> => {
     const response = await api.get('/api/locations');
-    return response.data;
+    return response.data.data;
   },
 
   getById: async (id: string): Promise<Location> => {
