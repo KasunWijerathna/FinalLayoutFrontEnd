@@ -39,7 +39,7 @@ export const locationService = {
   },
 
   update: async (id: string, data: Partial<Location>): Promise<Location> => {
-    const response = await api.patch(`/api/locations/${id}`, data);
+    const response = await api.put(`/api/locations/${id}`, data);
     return response.data;
   },
 
