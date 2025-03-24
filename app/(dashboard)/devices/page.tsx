@@ -176,7 +176,12 @@ export default function DevicesPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const filteredDevices = devices.filter(device => device.location === selectedLocation);
+  const filteredDevices = devices.filter(device => {
+    const deviceLocation = typeof device.location === 'string' 
+      ? device.location 
+      : device.location._id;
+    return deviceLocation === selectedLocation;
+  });
 
   return (
     <Box>

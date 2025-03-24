@@ -6,10 +6,11 @@ export interface Device {
   serialNumber: string;
   type: 'pos' | 'kiosk' | 'signage';
   status: Status;
-  location: string;
+  location: Location | string;  // Can be either a Location object or string ID
   image?: string;
   createdAt: string;
   updatedAt: string;
+  user: string;
 }
 
 export interface DashboardStats {
