@@ -73,7 +73,7 @@ export default function DevicesPage() {
         serialNumber: device.serialNumber,
         type: device.type,
         status: device.status,
-        location: device.location,
+        location: typeof device.location === 'string' ? device.location : device.location._id,
         image: device.image || ''
       });
     } else {
@@ -112,11 +112,19 @@ export default function DevicesPage() {
         return;
       }
 
+      const deviceData = {
+        serialNumber: formData.serialNumber,
+        type: formData.type,
+        status: formData.status,
+        location: formData.location,
+        image: formData.image
+      };
+
       if (editingDevice) {
         await dispatch(updateDevice({ 
           locationId: selectedLocation, 
           deviceId: editingDevice._id, 
-          data: formData 
+          data: deviceData 
         })).unwrap();
         setSnackbar({
           open: true,
@@ -126,7 +134,7 @@ export default function DevicesPage() {
       } else {
         await dispatch(createDevice({ 
           locationId: selectedLocation, 
-          data: formData 
+          data: deviceData 
         })).unwrap();
         setSnackbar({
           open: true,
